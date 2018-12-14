@@ -1,6 +1,10 @@
-# Final Project: Predicting Churn using Logistic Regression, Random Forest and Naive Bayes.
+## Final Project: 
 
-## Main question: What machine learning algorithm perform best to predict the churn rate in the telecom industry? 
+Predicting Churn using Logistic Regression, Random Forest and Naive Bayes.
+
+## Main question: 
+
+What machine learning algorithm perform best to predict the churn rate in the telecom industry? 
 
 ## Hypothesis: 
 
