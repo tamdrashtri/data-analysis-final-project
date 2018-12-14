@@ -1,6 +1,6 @@
 ## Final Project: 
 
-Predicting Churn using Logistic Regression, Random Forest and Naive Bayes.
+Predicting Churn using Logistic Regression, Random Forest and Support Vector Machine, .
 
 ## Main question: 
 
