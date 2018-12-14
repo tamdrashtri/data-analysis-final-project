@@ -8,7 +8,8 @@ What machine learning algorithm perform best to predict the churn rate in the te
 
 ## Hypothesis: 
 
+Complex machine learning models have more predictive powers compared to simple algorithms.
 
-And think about a hypothesis if applicable.
-What is your final ‘product (think graphs etc)
-As an extension on the above, start laying out your project and your analysis pipeline.
+## What is the final product?
+
+I will use a Shiny dashboard to present my findings. 
