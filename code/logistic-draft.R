@@ -7,6 +7,12 @@
 # - understand the roc curve more
 # - does strings2factor help or is it correct to use that for logistic regression?
 # - learn caret
+# - plot confusion matrix
+# - changes: try different algorithms
+# - do a SWOT analysis
+# - Agile techniques
+# - hyperparameter
+# -
 
 library(simpleSetup)
 
@@ -93,7 +99,7 @@ prediction(test.predicted.m1, test$Churn) %>%
 
 prediction(test.predicted.m1, test$Churn) %>%
   performance(measure = "auc") %>%
-  .@y.values
+  .@y.values #0.84
 
 
 
