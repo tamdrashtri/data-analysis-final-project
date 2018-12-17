@@ -1,6 +1,4 @@
-
-
-
+# https://afit-r.github.io/tree_based_methods
 # SETUP-------
 
 # this package helps to install and load packages at the same time.
@@ -23,17 +21,158 @@ train.index <- createDataPartition(churn$Churn, p = .7, list = FALSE)
 train <- churn[ train.index,]
 test  <- churn[-train.index,]
 
+test %<>%
+  select(-customerID) %>%
+  drop_na()
+
+train %<>%
+  select(-customerID) %>%
+  drop_na()
+
+# Feature Engineering -----------------------------------------------------
+
+# use recipes to quickly turn features into formats that are favourable for logistic regression
+recObj <- recipe(Churn ~ ., data = train) %>% # chose Churn as the response variable and the rest are explainatory variables
+  step_dummy(all_nominal()) %>% # convert string to factor
+  prep(data = train) # prepare for this data
+
+recObj
+
+recObj <- recipe(Churn ~ ., data = train) %>% # chose Churn as the response variable and the rest are explainatory variables
+  step_string2factor(Churn) %>%
+  step_dummy(all_predictors()) %>% # convert string to factor
+  step_BoxCox(all_numeric()) %>%
+  #step_discretize(all_numeric(), options = list(min_unique = 1)) %>%
+  prep(data = train) # prepare for this data
+
+# recObj <- recipe(Churn ~ ., data = train) %>% # chose Churn as the response variable and the rest are explainatory variables
+#   step_dummy(all_nominal()) %>% # convert string to factor
+#   step_BoxCox(all_numeric()) %>%
+#   #step_discretize(all_numeric(), options = list(min_unique = 1)) %>%
+#   prep(data = train) # prepare for this data
+
+bakedTrain <- bake(recObj, new_data = train) # use bake to transform according to recipes
+bakedTest <- bake(recObj, new_data = test)
+
+
+
+# for reproduciblity
+set.seed(123)
+
+# default RF model
+m1 <- randomForest(
+  formula = Churn ~ .,
+  data    = bakedTrain
+)
+
+m1
+
+plot(m1)
+
+varImpPlot(m1,
+           sort = T,
+           n.var=10,
+           main="Top 10 - Variable Importance")
+
+# Install and load required packages for decision trees and forests
+library(rpart)
+install.packages('randomForest')
+library(randomForest)
+install.packages('party')
+library(party)
+
+# Build Random Forest Ensemble
+set.seed(415)
+fit <- randomForest(Churn ~ .,
+                    data= bakedTrain, importance=TRUE, ntree=2000)
+
+fit
+
+# Build condition inference tree Random Forest
+
+fit <- cforest(Churn ~ . ,
+               data = bakedTrain, controls=cforest_unbiased(ntree=2000, mtry=3))
+# Now let's make a prediction and write a submission file
+Prediction <- predict(fit, bakedTest, OOB=TRUE, type = "response")
+
+
+Prediction <- predict(m1, bakedTest, OOB=TRUE, type = "response")
+
+# create training and validation data
+set.seed(123)
+valid_split <- initial_split(bakedTrain, .8)
+
+# training data
+bakedTrain_v2 <- analysis(valid_split)
+
+# validation data
+churn_valid <- assessment(valid_split)
+x_test <- churn_valid[setdiff(names(churn_valid), "Churn")]
+y_test <- churn_valid$Churn
+
+rf_oob_comp <- randomForest(
+  formula = Churn ~ .,
+  data    = bakedTrain_v2,
+  xtest   = x_test,
+  ytest   = y_test
+)
+rf_oob_comp
+# extract OOB & validation errors
+oob <- sqrt(rf_oob_comp$mse)
+validation <- sqrt(rf_oob_comp$test$mse)
+
+Prediction <- predict(fit, test, OOB=TRUE, type = "response")
+
+fit
+
+
+
+
+# not yet tried -----------------------------------------------------------
+# compare error rates
+tibble::tibble(
+  `Out of Bag Error` = oob,
+  `Test error` = validation,
+  ntrees = 1:rf_oob_comp$ntree
+) %>%
+  gather(Metric, RMSE, -ntrees) %>%
+  ggplot(aes(ntrees, RMSE, color = Metric)) +
+  geom_line() +
+  scale_y_continuous(labels = scales::dollar) +
+  xlab("Number of trees")
+# Look at variable importance
+varImpPlot(fit)
+# Now let's make a prediction and write a submission file
+Prediction <- predict(fit, test)
+fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID,
+               data = train, controls=cforest_unbiased(ntree=2000, mtry=3))
+# Now let's make a prediction and write a submission file
+Prediction <- predict(fit, test, OOB=TRUE, type = "response")
+# number of trees with lowest MSE
+which.min(m1$mse)
+## [1] 344
+
+# RMSE of this optimal random forest
+sqrt(m1$mse[which.min(m1$mse)])
+## [1] 25673.5
+#
+
+
+
+# h2o ---------------------------------------------------------------------
+
+
 
 # start up h2o (I turn off progress bars when creating reports/tutorials)
 h2o.no_progress()
 h2o.init(max_mem_size = "5g")
 
 # create feature names
-y <- "Churn"
+y <- "Churn_Yes"
 x <- setdiff(names(churn), y)
 
 # turn training set into h2o object
-train.h2o <- as.h2o(train)
+train.h2o <- as.h2o(bakedTrain)
 
 # hyperparameter grid
 hyper_grid.h2o <- list(
@@ -52,6 +191,9 @@ grid <- h2o.grid(
   hyper_params = hyper_grid.h2o,
   search_criteria = list(strategy = "Cartesian")
 )
+
+
+
 
 # collect the results and sort by our model performance metric of choice
 grid_perf <- h2o.getGrid(
@@ -125,8 +267,6 @@ head(pred_ranger$predictions)
 pred_h2o <- predict(best_model, ames_test.h2o)
 head(pred_h2o)
 
-
-
 # ----------------------------
 # default RF model
 m1 <- randomForest(
@@ -146,16 +286,16 @@ set.seed(123)
 valid_split <- initial_split(ames_train, .8)
 
 # training data
-ames_train_v2 <- analysis(valid_split)
+churn_train_v2 <- analysis(valid_split)
 
 # validation data
-ames_valid <- assessment(valid_split)
-x_test <- ames_valid[setdiff(names(ames_valid), "Sale_Price")]
-y_test <- ames_valid$Sale_Price
+churn_valid <- assessment(valid_split)
+x_test <- churn_valid[setdiff(names(churn_valid), "Churn")]
+y_test <- churn_valid$Churn
 
 rf_oob_comp <- randomForest(
-  formula = Sale_Price ~ .,
-  data    = ames_train_v2,
+  formula = Churn ~ .,
+  data    = churn_train_v2,
   xtest   = x_test,
   ytest   = y_test
 )
@@ -177,7 +317,7 @@ tibble::tibble(
   xlab("Number of trees")
 
 # names of features
-features <- setdiff(names(ames_train), "Sale_Price")
+features <- setdiff(names(bakedTrain_v2), "Churn")
 
 set.seed(123)
 

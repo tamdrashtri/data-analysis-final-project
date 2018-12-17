@@ -10,10 +10,11 @@ library(simpleSetup)
 packages <- c('tidyverse', 'skimr', "GGally", "purrr", "repurrrsive",
               "nycflights13","gmodels", "stringr", "DataExplorer",
               "summarytools", "recipes", "broom", "modelr", "magrittr",
-              "corrr", "viridis", "readr", "caret", "forcats", "tidyquant")
+              "corrr", "viridis", "readr", "caret", "forcats", "tidyquant",
+              "caret")
 library_install(packages)
 
-churn <- read_csv("data/WA_Fn-UseC_-Telco-Customer-Churn.csv")
+
 
 # Load data
 set.seed(123)
