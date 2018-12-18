@@ -48,6 +48,7 @@ recObj <- recipe(Churn ~ ., data = train) %>% # chose Churn as the response vari
 bakedTrain <- bake(recObj, new_data = train) # use bake to transform according to recipes
 bakedTest <- bake(recObj, new_data = test)
 
+
 m1 <- rpart(
   formula = Churn_Yes ~ .,
   data    = bakedTrain,
@@ -190,6 +191,16 @@ bagged_cv
 
 # plot most important variables
 plot(varImp(bagged_cv), 20)
+
+col_index <-
+  data.frame(varImp(bagged_cv))
+
+ggplot(bagged_cv, aes(x = names, y = Overall)) +
+  geom_segment(aes(xend = names, yend = 0)) +
+  geom_point() +
+  coord_flip() +
+  scale_color_viridis() +
+  theme_linedraw()
 
 pred <- predict(bagged_cv, bakedTest)
 

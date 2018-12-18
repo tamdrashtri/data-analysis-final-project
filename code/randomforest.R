@@ -69,10 +69,26 @@ m1
 
 plot(m1)
 
-varImpPlot(m1,
+Prediction <- predict(m1, bakedTest, OOB=TRUE, type = "response")
+
+
+varImpPlot(Prediction,
            sort = T,
            n.var=10,
            main="Top 10 - Variable Importance")
+
+col_index <-
+  data.frame(varImp(m1)) %>%
+  mutate(names = factor(row.names(.))) %>%
+  arrange(-Overall)
+
+ggplot(col_index, aes(x = names, y = Overall)) +
+  geom_segment(aes(xend = names, yend = 0)) +
+  geom_point() +
+  coord_flip() +
+  theme(text = element_text(size=10)) +
+  scale_color_viridis() +
+  theme_linedraw()
 
 # Install and load required packages for decision trees and forests
 library(rpart)
@@ -121,7 +137,7 @@ rf_oob_comp
 oob <- sqrt(rf_oob_comp$mse)
 validation <- sqrt(rf_oob_comp$test$mse)
 
-Prediction <- predict(fit, test, OOB=TRUE, type = "response")
+prediction <- predict(fit, test, OOB=TRUE, type = "response")
 
 fit
 
@@ -147,9 +163,9 @@ Prediction <- predict(fit, test)
 fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID,
                data = train, controls=cforest_unbiased(ntree=2000, mtry=3))
 # Now let's make a prediction and write a submission file
-Prediction <- predict(fit, test, OOB=TRUE, type = "response")
+prediction <- predict(fit, test, OOB=TRUE, type = "response")
 # number of trees with lowest MSE
-which.min(m1$mse)
+which.min(prediction$mse)
 ## [1] 344
 
 # RMSE of this optimal random forest

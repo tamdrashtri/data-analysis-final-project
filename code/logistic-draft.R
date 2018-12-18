@@ -79,6 +79,8 @@ ggplot(col_index, aes(x = names, y = Overall)) +
   scale_color_viridis() +
   theme_linedraw()
 
+bakedTrain %>%
+  get_correlation(formula = Churn_Yes ~ -Churn_Yes)
 #
 test.predicted.m1 <- predict(model1, newdata = bakedTest, type = "response")
 
@@ -100,6 +102,20 @@ prediction(test.predicted.m1, test$Churn) %>%
 prediction(test.predicted.m1, test$Churn) %>%
   performance(measure = "auc") %>%
   .@y.values #0.84
+
+library(moderndive)
+library(dplyr)
+mtcars <- mtcars %>%
+  mutate(cyl = as.factor(cyl))
+
+# Regression models
+mpg_model <- lm(mpg ~ hp, data = mtcars)
+mpg_mlr_model <- lm(mpg ~ hp + wt, data = mtcars)
+mpg_mlr_model2 <- lm(mpg ~ hp + cyl, data = mtcars)
+
+# Regression tables
+get_regression_table(model = mpg_model)
+
 
 
 

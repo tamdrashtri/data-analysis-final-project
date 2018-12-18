@@ -30,7 +30,6 @@ Both of these types of variables are beneficial for our predictive analysis. It 
 This project uses R to implement three predictive models: logistic regression, random forest and decision trees. I choose these models because they are often used in papers that have been published on churn. These are also well-known predictive models. 
 
 Some of them will be implemented as black box, meaning I cannot know very well what are the processes they do the analysis on. Therefore, I will choose the dive deep into logistic regression and see if they are well performed. I choose logistic regression particularly because it is one of the models easiest to explain and measure performance. 
-
 Bear in mind that these models will be briefly explained instead of looking into details. Specifically, I will mention its advantages and disadvantages of each of these models, then I will explain the steps I did to get the final results. 
 
 ```{r knitr_init, echo=FALSE, cache=FALSE}
@@ -343,10 +342,80 @@ bagged_cv
 # plot most important variables
 plot(varImp(bagged_cv), 20)
 
+col_index <-
+  data.frame(varImp(bagged_cv)) %>%
+  mutate(names = factor(row.names(.))) %>%
+  arrange(-Overall)
+
+ggplot(col_index, aes(x = names, y = Overall)) +
+  geom_segment(aes(xend = names, yend = 0)) +
+  geom_point() +
+  coord_flip() +
+  scale_color_viridis() +
+  theme_linedraw()
+
 pred <- predict(bagged_cv, bakedTest)
 
 RMSE(pred, bakedTest$Churn_Yes)
 ```
+
+# Random Forest
+
+
+
+
+```{r}
+recObj <- recipe(Churn ~ ., data = train) %>% # chose Churn as the response variable and the rest are explainatory variables
+  step_string2factor(Churn) %>%
+  step_dummy(all_predictors()) %>% # convert string to factor
+  step_BoxCox(all_numeric()) %>%
+  #step_discretize(all_numeric(), options = list(min_unique = 1)) %>%
+  prep(data = train) # prepare for this data
+
+# recObj <- recipe(Churn ~ ., data = train) %>% # chose Churn as the response variable and the rest are explainatory variables
+#   step_dummy(all_nominal()) %>% # convert string to factor
+#   step_BoxCox(all_numeric()) %>%
+#   #step_discretize(all_numeric(), options = list(min_unique = 1)) %>%
+#   prep(data = train) # prepare for this data
+
+bakedTrain <- bake(recObj, new_data = train) # use bake to transform according to recipes
+bakedTest <- bake(recObj, new_data = test)
+
+
+
+# for reproduciblity
+set.seed(123)
+
+# default RF model
+m1 <- randomForest(
+  formula = Churn ~ .,
+  data    = bakedTrain
+)
+
+m1
+
+plot(m1)
+
+varImpPlot(m1,
+           sort = T,
+           n.var=10,
+           main="Top 10 - Variable Importance")
+
+# Install and load required packages for decision trees and forests
+library(rpart)
+install.packages('randomForest')
+library(randomForest)
+install.packages('party')
+library(party)
+
+# Build Random Forest Ensemble
+set.seed(415)
+fit <- randomForest(Churn ~ .,
+                    data= bakedTrain, importance=TRUE, ntree=2000)
+
+fit
+```
+
 
 # Limitations and further study
 
