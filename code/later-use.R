@@ -141,3 +141,110 @@ bakedTrain %>%
 recObj <- recipe(Churn ~ ., data = train) %>% # chose Churn as the response variable and the rest are explainatory variables
   step_dummy(all_nominal()) %>% # convert string to factor for all nominal variables
   prep(data = train) # prepare for this data
+
+# decision trees
+m1 <- rpart(
+  formula = Churn_Yes ~ .,
+  data    = bakedTrain,
+  method  = "anova"
+)
+
+rpart.plot(m1)
+
+plotcp(m1)
+
+
+m2 <- rpart(
+  formula = Churn_Yes ~ .,
+  data    = bakedTrain,
+  method  = "anova",
+  control = list(cp = 0, xval = 10)
+)
+
+plotcp(m2)
+abline(v = 12, lty = "dashed")
+
+m1$cptable
+
+m3 <- rpart(
+  formula = Churn_Yes ~ .,
+  data    = bakedTrain,
+  method  = "anova",
+  control = list(minsplit = 10, maxdepth = 12, xval = 10)
+)
+
+m3$cptable
+
+hyper_grid <- expand.grid(
+  minsplit = seq(5, 20, 1),
+  maxdepth = seq(8, 15, 1)
+)
+
+head(hyper_grid)
+
+nrow(hyper_grid)
+
+models <- list()
+
+for (i in 1:nrow(hyper_grid)) {
+
+  # get minsplit, maxdepth values at row i
+  minsplit <- hyper_grid$minsplit[i]
+  maxdepth <- hyper_grid$maxdepth[i]
+
+  # train a model and store in the list
+  models[[i]] <- rpart(
+    formula = Churn_Yes ~ .,
+    data    = bakedTrain,
+    method  = "anova",
+    control = list(minsplit = minsplit, maxdepth = maxdepth)
+  )
+}
+
+# function to get optimal cp
+get_cp <- function(x) {
+  min    <- which.min(x$cptable[, "xerror"])
+  cp <- x$cptable[min, "CP"]
+}
+
+# function to get minimum error
+get_min_error <- function(x) {
+  min    <- which.min(x$cptable[, "xerror"])
+  xerror <- x$cptable[min, "xerror"]
+}
+
+hyper_grid %>%
+  mutate(
+    cp    = purrr::map_dbl(models, get_cp),
+    error = purrr::map_dbl(models, get_min_error)
+  ) %>%
+  arrange(error) %>%
+  top_n(-5, wt = error)
+
+optimal_tree <- rpart(
+  formula = Churn_Yes ~ .,
+  data    = bakedTrain,
+  method  = "anova",
+  control = list(minsplit = 11, maxdepth = 8, cp = 0.01)
+)
+
+pred <- predict(optimal_tree, newdata = bakedTest)
+RMSE(pred = pred, obs = bakedTest$Churn_Yes)
+
+# make bootstrapping reproducible
+set.seed(123)
+
+# train bagged model
+bagged_m1 <- bagging(
+  formula = Churn_Yes ~ .,
+  data    = bakedTrain,
+  coob    = TRUE
+)
+
+bagged_m1
+
+# assess 10-50 bagged trees
+ntree <- 10:50
+
+# create empty vector to store OOB RMSE values
+rmse <- vector(mode = "numeric", length = length(ntree))
