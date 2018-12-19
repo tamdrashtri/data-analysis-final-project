@@ -15,13 +15,12 @@ library_install(packages)
 
 churn <- read_csv("data/WA_Fn-UseC_-Telco-Customer-Churn.csv")
 
-
-set.seed(123)
-
+# create training and testing dataset
 train.index <- createDataPartition(churn$Churn, p = .7, list = FALSE)
 train <- churn[ train.index,]
 test  <- churn[-train.index,]
 
+# remove unnecessary columns and drop missing values for both training and testing
 test %<>%
   select(-customerID) %>%
   drop_na()
@@ -32,12 +31,6 @@ train %<>%
 
 # Feature Engineering -----------------------------------------------------
 
-# # use recipes to quickly turn features into formats that are favourable for logistic regression
-# recObj <- recipe(Churn ~ ., data = train) %>% # chose Churn as the response variable and the rest are explainatory variables
-#   step_dummy(all_nominal()) %>% # convert string to factor
-#   prep(data = train) # prepare for this data
-#
-# recObj
 
 recObj <- recipe(Churn ~ ., data = train) %>% # chose Churn as the response variable and the rest are explainatory variables
   step_string2factor(Churn) %>%
@@ -53,23 +46,16 @@ bakedTest <- bake(recObj, new_data = test)
 # for reproduciblity
 set.seed(123)
 
+#use Random Forest
 # default RF model
 m1 <- randomForest(
   formula = Churn ~ .,
   data    = bakedTrain
 )
 
-m1
+m1 # show error rate and performance
 
-plot(m1)
-
-Prediction <- predict(m1, bakedTest, OOB=TRUE, type = "response")
-
-col_index <-
-  data.frame(varImp(m1)) %>%
-  mutate(names = factor(row.names(.))) %>%
-  arrange(-Overall)
-
+# draw the importance graph
 ggplot(col_index, aes(x = names, y = Overall)) +
   geom_segment(aes(xend = names, yend = 0)) +
   geom_point() +
@@ -78,264 +64,10 @@ ggplot(col_index, aes(x = names, y = Overall)) +
   scale_color_viridis() +
   theme_linedraw()
 
-
-# Build Random Forest Ensemble
-set.seed(415)
-fit <- randomForest(Churn ~ .,
-                    data= bakedTrain, importance=TRUE, ntree=2000)
-
-fit
-
-# Build condition inference tree Random Forest
-
-fit <- cforest(Churn ~ . ,
-               data = bakedTrain, controls=cforest_unbiased(ntree=2000, mtry=3))
-# Now let's make a prediction and write a submission file
-Prediction <- predict(fit, bakedTest, OOB=TRUE, type = "response")
-
-
+# using it to predict
 Prediction <- predict(m1, bakedTest, OOB=TRUE, type = "response")
-Prediction
-# create training and validation data
-set.seed(123)
-valid_split <- initial_split(bakedTrain, .8)
-
-# training data
-bakedTrain_v2 <- analysis(valid_split)
-
-# validation data
-churn_valid <- assessment(valid_split)
-x_test <- churn_valid[setdiff(names(churn_valid), "Churn")]
-y_test <- churn_valid$Churn
-
-rf_oob_comp <- randomForest(
-  formula = Churn ~ .,
-  data    = bakedTrain_v2,
-  xtest   = x_test,
-  ytest   = y_test
-)
-rf_oob_comp
-# extract OOB & validation errors
-oob <- sqrt(rf_oob_comp$mse)
-validation <- sqrt(rf_oob_comp$test$mse)
-
-prediction <- predict(fit, test, OOB=TRUE, type = "response")
-
-fit
 
 
 
 
-# not yet tried -----------------------------------------------------------
-# compare error rates
-tibble::tibble(
-  `Out of Bag Error` = oob,
-  `Test error` = validation,
-  ntrees = 1:rf_oob_comp$ntree
-) %>%
-  gather(Metric, RMSE, -ntrees) %>%
-  ggplot(aes(ntrees, RMSE, color = Metric)) +
-  geom_line() +
-  scale_y_continuous(labels = scales::dollar) +
-  xlab("Number of trees")
-# Look at variable importance
-varImpPlot(fit)
-# Now let's make a prediction and write a submission file
-Prediction <- predict(fit, test)
-fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + FamilySize + FamilyID,
-               data = train, controls=cforest_unbiased(ntree=2000, mtry=3))
-# Now let's make a prediction and write a submission file
-prediction <- predict(fit, test, OOB=TRUE, type = "response")
-# number of trees with lowest MSE
-which.min(prediction$mse)
-## [1] 344
-
-# RMSE of this optimal random forest
-sqrt(m1$mse[which.min(m1$mse)])
-## [1] 25673.5
-#
-
-
-# ----------------------------
-# default RF model
-m1 <- randomForest(
-  formula = Churn ~ .,
-  data    = train
-)
-
-plot(m1)
-
-which.min(m1$mse)
-## [1] 344
-
-# RMSE of this optimal random forest
-sqrt(m1$mse[which.min(m1$mse)])
-
-set.seed(123)
-valid_split <- initial_split(ames_train, .8)
-
-# training data
-churn_train_v2 <- analysis(valid_split)
-
-# validation data
-churn_valid <- assessment(valid_split)
-x_test <- churn_valid[setdiff(names(churn_valid), "Churn")]
-y_test <- churn_valid$Churn
-
-rf_oob_comp <- randomForest(
-  formula = Churn ~ .,
-  data    = churn_train_v2,
-  xtest   = x_test,
-  ytest   = y_test
-)
-
-# extract OOB & validation errors
-oob <- sqrt(rf_oob_comp$mse)
-validation <- sqrt(rf_oob_comp$test$mse)
-
-# compare error rates
-tibble::tibble(
-  `Out of Bag Error` = oob,
-  `Test error` = validation,
-  ntrees = 1:rf_oob_comp$ntree
-) %>%
-  gather(Metric, RMSE, -ntrees) %>%
-  ggplot(aes(ntrees, RMSE, color = Metric)) +
-  geom_line() +
-  scale_y_continuous(labels = scales::dollar) +
-  xlab("Number of trees")
-
-# names of features
-features <- setdiff(names(bakedTrain_v2), "Churn")
-
-set.seed(123)
-
-m2 <- tuneRF(
-  x          = ames_train[features],
-  y          = ames_train$Sale_Price,
-  ntreeTry   = 500,
-  mtryStart  = 5,
-  stepFactor = 1.5,
-  improve    = 0.01,
-  trace      = FALSE      # to not show real-time progress
-)
-
-# randomForest speed
-system.time(
-  ames_randomForest <- randomForest(
-    formula = Sale_Price ~ .,
-    data    = ames_train,
-    ntree   = 500,
-    mtry    = floor(length(features) / 3)
-  )
-)
-##    user  system elapsed
-##  55.371   0.590  57.364
-
-# ranger speed
-system.time(
-  ames_ranger <- ranger(
-    formula   = Sale_Price ~ .,
-    data      = ames_train,
-    num.trees = 500,
-    mtry      = floor(length(features) / 3)
-  )
-)
-
-# hyperparameter grid search
-hyper_grid <- expand.grid(
-  mtry       = seq(20, 30, by = 2),
-  node_size  = seq(3, 9, by = 2),
-  sampe_size = c(.55, .632, .70, .80),
-  OOB_RMSE   = 0
-)
-
-# total number of combinations
-nrow(hyper_grid)
-
-for(i in 1:nrow(hyper_grid)) {
-
-  # train model
-  model <- ranger(
-    formula         = Sale_Price ~ .,
-    data            = ames_train,
-    num.trees       = 500,
-    mtry            = hyper_grid$mtry[i],
-    min.node.size   = hyper_grid$node_size[i],
-    sample.fraction = hyper_grid$sampe_size[i],
-    seed            = 123
-  )
-
-  # add OOB error to grid
-  hyper_grid$OOB_RMSE[i] <- sqrt(model$prediction.error)
-}
-
-hyper_grid %>%
-  dplyr::arrange(OOB_RMSE) %>%
-  head(10)
-
-# one-hot encode our categorical variables
-one_hot <- dummyVars(~ ., ames_train, fullRank = FALSE)
-ames_train_hot <- predict(one_hot, ames_train) %>% as.data.frame()
-
-# make ranger compatible names
-names(ames_train_hot) <- make.names(names(ames_train_hot), allow_ = FALSE)
-
-# hyperparameter grid search --> same as above but with increased mtry values
-hyper_grid_2 <- expand.grid(
-  mtry       = seq(50, 200, by = 25),
-  node_size  = seq(3, 9, by = 2),
-  sampe_size = c(.55, .632, .70, .80),
-  OOB_RMSE  = 0
-)
-
-# perform grid search
-for(i in 1:nrow(hyper_grid_2)) {
-
-  # train model
-  model <- ranger(
-    formula         = Sale.Price ~ .,
-    data            = ames_train_hot,
-    num.trees       = 500,
-    mtry            = hyper_grid_2$mtry[i],
-    min.node.size   = hyper_grid_2$node_size[i],
-    sample.fraction = hyper_grid_2$sampe_size[i],
-    seed            = 123
-  )
-
-  # add OOB error to grid
-  hyper_grid_2$OOB_RMSE[i] <- sqrt(model$prediction.error)
-}
-
-hyper_grid_2 %>%
-  dplyr::arrange(OOB_RMSE) %>%
-  head(10)
-
-OOB_RMSE <- vector(mode = "numeric", length = 100)
-
-for(i in seq_along(OOB_RMSE)) {
-
-  optimal_ranger <- ranger(
-    formula         = Sale_Price ~ .,
-    data            = ames_train,
-    num.trees       = 500,
-    mtry            = 24,
-    min.node.size   = 5,
-    sample.fraction = .8,
-    importance      = 'impurity'
-  )
-
-  OOB_RMSE[i] <- sqrt(optimal_ranger$prediction.error)
-}
-
-hist(OOB_RMSE, breaks = 20)
-
-optimal_ranger$variable.importance %>%
-  tidy() %>%
-  dplyr::arrange(desc(x)) %>%
-  dplyr::top_n(25) %>%
-  ggplot(aes(reorder(names, x), x)) +
-  geom_col() +
-  coord_flip() +
-  ggtitle("Top 25 important variables")
 
