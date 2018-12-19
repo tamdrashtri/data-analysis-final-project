@@ -9,7 +9,8 @@ packages <- c('tidyverse', 'skimr', "GGally", "purrr", "repurrrsive",
               "nycflights13","gmodels", "stringr", "DataExplorer",
               "summarytools", "recipes", "broom", "modelr", "magrittr",
               "corrr", "viridis", "readr", "caret", "forcats", "tidyquant",
-              "h2o", "rsample", "randomForest", "ranger", "caret")
+              "h2o", "rsample", "randomForest", "ranger", "caret", "rpart",
+              "party")
 library_install(packages)
 
 churn <- read_csv("data/WA_Fn-UseC_-Telco-Customer-Churn.csv")
@@ -31,12 +32,12 @@ train %<>%
 
 # Feature Engineering -----------------------------------------------------
 
-# use recipes to quickly turn features into formats that are favourable for logistic regression
-recObj <- recipe(Churn ~ ., data = train) %>% # chose Churn as the response variable and the rest are explainatory variables
-  step_dummy(all_nominal()) %>% # convert string to factor
-  prep(data = train) # prepare for this data
-
-recObj
+# # use recipes to quickly turn features into formats that are favourable for logistic regression
+# recObj <- recipe(Churn ~ ., data = train) %>% # chose Churn as the response variable and the rest are explainatory variables
+#   step_dummy(all_nominal()) %>% # convert string to factor
+#   prep(data = train) # prepare for this data
+#
+# recObj
 
 recObj <- recipe(Churn ~ ., data = train) %>% # chose Churn as the response variable and the rest are explainatory variables
   step_string2factor(Churn) %>%
@@ -45,16 +46,9 @@ recObj <- recipe(Churn ~ ., data = train) %>% # chose Churn as the response vari
   #step_discretize(all_numeric(), options = list(min_unique = 1)) %>%
   prep(data = train) # prepare for this data
 
-# recObj <- recipe(Churn ~ ., data = train) %>% # chose Churn as the response variable and the rest are explainatory variables
-#   step_dummy(all_nominal()) %>% # convert string to factor
-#   step_BoxCox(all_numeric()) %>%
-#   #step_discretize(all_numeric(), options = list(min_unique = 1)) %>%
-#   prep(data = train) # prepare for this data
 
 bakedTrain <- bake(recObj, new_data = train) # use bake to transform according to recipes
 bakedTest <- bake(recObj, new_data = test)
-
-
 
 # for reproduciblity
 set.seed(123)
@@ -71,12 +65,6 @@ plot(m1)
 
 Prediction <- predict(m1, bakedTest, OOB=TRUE, type = "response")
 
-
-varImpPlot(Prediction,
-           sort = T,
-           n.var=10,
-           main="Top 10 - Variable Importance")
-
 col_index <-
   data.frame(varImp(m1)) %>%
   mutate(names = factor(row.names(.))) %>%
@@ -90,12 +78,6 @@ ggplot(col_index, aes(x = names, y = Overall)) +
   scale_color_viridis() +
   theme_linedraw()
 
-# Install and load required packages for decision trees and forests
-library(rpart)
-install.packages('randomForest')
-library(randomForest)
-install.packages('party')
-library(party)
 
 # Build Random Forest Ensemble
 set.seed(415)
@@ -113,7 +95,7 @@ Prediction <- predict(fit, bakedTest, OOB=TRUE, type = "response")
 
 
 Prediction <- predict(m1, bakedTest, OOB=TRUE, type = "response")
-
+Prediction
 # create training and validation data
 set.seed(123)
 valid_split <- initial_split(bakedTrain, .8)
@@ -173,115 +155,6 @@ sqrt(m1$mse[which.min(m1$mse)])
 ## [1] 25673.5
 #
 
-
-
-# h2o ---------------------------------------------------------------------
-
-
-
-# start up h2o (I turn off progress bars when creating reports/tutorials)
-h2o.no_progress()
-h2o.init(max_mem_size = "5g")
-
-# create feature names
-y <- "Churn_Yes"
-x <- setdiff(names(churn), y)
-
-# turn training set into h2o object
-train.h2o <- as.h2o(bakedTrain)
-
-# hyperparameter grid
-hyper_grid.h2o <- list(
-  ntrees      = seq(200, 500, by = 100),
-  mtries      = seq(20, 30, by = 2),
-  sample_rate = c(.55, .632, .70, .80)
-)
-
-# build grid search
-grid <- h2o.grid(
-  algorithm = "randomForest",
-  grid_id = "rf_grid",
-  x = x,
-  y = y,
-  training_frame = train.h2o,
-  hyper_params = hyper_grid.h2o,
-  search_criteria = list(strategy = "Cartesian")
-)
-
-
-
-
-# collect the results and sort by our model performance metric of choice
-grid_perf <- h2o.getGrid(
-  grid_id = "rf_grid",
-  sort_by = "mse",
-  decreasing = FALSE
-)
-print(grid_perf)
-
-# hyperparameter grid
-hyper_grid.h2o <- list(
-  ntrees      = seq(200, 500, by = 150),
-  mtries      = seq(15, 35, by = 10),
-  max_depth   = seq(20, 40, by = 5),
-  min_rows    = seq(1, 5, by = 2),
-  nbins       = seq(10, 30, by = 5),
-  sample_rate = c(.55, .632, .75)
-)
-
-# random grid search criteria
-search_criteria <- list(
-  strategy = "RandomDiscrete",
-  stopping_metric = "mse",
-  stopping_tolerance = 0.005,
-  stopping_rounds = 10,
-  max_runtime_secs = 30*60
-)
-
-# build grid search
-random_grid <- h2o.grid(
-  algorithm = "randomForest",
-  grid_id = "rf_grid2",
-  x = x,
-  y = y,
-  training_frame = train.h2o,
-  hyper_params = hyper_grid.h2o,
-  search_criteria = search_criteria
-)
-
-# collect the results and sort by our model performance metric of choice
-grid_perf2 <- h2o.getGrid(
-  grid_id = "rf_grid2",
-  sort_by = "mse",
-  decreasing = FALSE
-)
-print(grid_perf2)
-
-# Grab the model_id for the top model, chosen by validation error
-best_model_id <- grid_perf2@model_ids[[1]]
-best_model <- h2o.getModel(best_model_id)
-
-# Now let’s evaluate the model performance on a test set
-ames_test.h2o <- as.h2o(ames_test)
-best_model_perf <- h2o.performance(model = best_model, newdata = ames_test.h2o)
-
-# RMSE of best model
-h2o.mse(best_model_perf) %>% sqrt()
-
-# randomForest
-pred_randomForest <- predict(ames_randomForest, ames_test)
-head(pred_randomForest)
-##        1        2        3        4        5        6
-## 128266.7 153888.0 264044.2 379186.5 212915.1 210611.4
-
-# ranger
-pred_ranger <- predict(ames_ranger, ames_test)
-head(pred_ranger$predictions)
-## [1] 128440.6 154160.1 266428.5 389959.6 225927.0 214493.1
-
-# h2o
-pred_h2o <- predict(best_model, ames_test.h2o)
-head(pred_h2o)
 
 # ----------------------------
 # default RF model
