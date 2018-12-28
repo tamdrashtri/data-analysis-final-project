@@ -1,17 +1,6 @@
 # https://afit-r.github.io/tree_based_methods
-# SETUP-------
 
-# this package helps to install and load packages at the same time.
-library(simpleSetup)
-
-# Load packages, install if needed
-packages <- c('tidyverse', 'skimr', "GGally", "purrr", "repurrrsive",
-              "nycflights13","gmodels", "stringr", "DataExplorer",
-              "summarytools", "recipes", "broom", "modelr", "magrittr",
-              "corrr", "viridis", "readr", "caret", "forcats", "tidyquant",
-              "h2o", "rsample", "randomForest", "ranger", "caret", "rpart",
-              "party")
-library_install(packages)
+source("code/setup.R")
 
 churn <- read_csv("data/WA_Fn-UseC_-Telco-Customer-Churn.csv")
 
@@ -19,6 +8,10 @@ churn <- read_csv("data/WA_Fn-UseC_-Telco-Customer-Churn.csv")
 train.index <- createDataPartition(churn$Churn, p = .7, list = FALSE)
 train <- churn[ train.index,]
 test  <- churn[-train.index,]
+
+write_csv(train, "train.churn.csv")
+write_csv(test, "test.churn.csv")
+
 
 # remove unnecessary columns and drop missing values for both training and testing
 test %<>%
@@ -53,6 +46,7 @@ m1 <- randomForest(
   data    = bakedTrain
 )
 
+vip(m1, bar = FALSE)
 m1 # show error rate and performance
 
 # draw the importance graph
