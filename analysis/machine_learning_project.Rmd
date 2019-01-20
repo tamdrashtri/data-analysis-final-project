@@ -1,0 +1,90 @@
+---
+title: "A Complete Machine Learning Project" 
+# subtitle: "Business Analytics Division"
+author: "Nguyen Chi Dung"
+output:
+  html_document: 
+    code_download: true
+    code_folding: hide
+    highlight: pygments
+    # number_sections: yes
+    theme: "flatly"
+    toc: TRUE
+    toc_float: TRUE
+---
+
+```{r setup,include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Giới thiệu
+
+Hầu hết lợi nhuận của các ngân hàng đến từ hoạt động cấp tín dụng và cho vay. Cấp tín dụng là một trong những hoạt động tạo ra một tỉ trọng lớn về doanh thu và lợi nhuận cho ngân hàng nhưng cũng tiềm ẩn rất nhiều rủi ro (Zakrzewska, 2007). Rủi ro chính của ngân hàng là khả năng khách hàng không có khả năng hoàn trả lại khoản vay mà ngân hàng đã cấp. Mặt khác, quyết định có hay không cung cấp một khoản vay cho khách hàng thường phụ thuộc nhiều vào trình độ cũng như kinh nghiệm của cán nhân viên thẩm định tín dụng (Thomas, 2000).
+
+Một trong những cách tiếp cận truyền thống khi xét duyệt các khoản vay là  căn cứ vào một số tiêu chí xếp hạng mà một số trong số đó là rất khó đo lường, hoặc khó có thể đo lường chính xác. Chẳng hạn tiêu chuẩn 5C khi cấp tín dụng là dựa trên những đánh giá của ngân hàng về tư cách, năng lực, vốn, tài sản thế chấp, và điều kiện của người xin vay (Abrahams & Zhang, 2008).Một số tiêu chí, chẳng hạn như tư cách và năng lực của người vay là một nhân tố khó đánh giá và do vậy có thể dẫn đến các sai sót khi quyết định cho vay. Ngoài ra phương pháp đánh giá xếp hạng tín dụng dựa trên tiêu chuẩn 5C là có chi phí cao và có thể xẩy ra sự không nhất quán về việc cho vay hay không giữa những nhân viên thẩm định tín dụng khác nhau đối với cùng một hồ sơ xin vay. Vì những hạn chế này, các ngân hàng cũng như các tổ chức tài chính cần sử dụng các phương pháp thẩm định và xếp hạng tín dụng tin cậy, khách quan và chi phí thấp nhằm giúp những tổ chức này quyết định có hay không cấp tín dụng cho các hồ sơ xin vay (Akhavein, Frame, & White, 2005; Chye, Chin, & Peng, 2004). Hơn nữa, theo Thomas và ctg (2002), các ngân hàng cần một phương pháp xếp hạng tín dụng mà thỏa mãn những đòi hỏi sau: (1) chi phí rẻ và dễ vận hành, (2) nhanh chóng và ổn định, (3) đưa ra những quyết định nhất quán dựa trên các thông tin khách quan không phụ thuộc vào cảm xúc và tình cảm chủ quan của con người, và (4) hiệu quả của hệ phương pháp xếp hạng tín dụng có thể dễ dàng kiểm tra, điều chỉnh ở bất kì thời điểm nào nhằm điều chỉnh kịp thời với những thay đổi về chính sách hoặc điều kiện của nền kinh tế.
+
+
+Đối với vấn đề phân loại và xếp hạng tín dụng, cách tiếp cận truyền thống là dựa vào các phương pháp thống kê thuần túy như hồi quy tuyến tính đa biến (Meyer & Pifer, 1970), phân tích khác biệt (Altman, 1968; Banasik, Crook, & Thomas, 2003), và hồi quy Logistic (Desai, Crook, & Overstreet, 1996; Dimitras, Zanakis, & Zopounidis, 1996; Elliott & Filinkov, 2008; Lee, Chiu, Lu, & Chen, 2002). Tuy nhiên những yêu cầu của hội đồng Basel về giám sát hoạt động ngân hàng (the Basel Committee on Banking Supervision) ban hành năm 2004 đòi hỏi các ngân hàng cũng như các tổ chức tài chính phải sử dụng những mô hình phân loại tín dụng tin cậy hơn nhằm nâng cao hiệu quả của việc phân bổ vốn. Nhằm đáp ứng những đòi hỏi trên, trong những năm gần đây đã xuất hiện một số mô hình phân loại tín dụng mới theo cách tiếp cận của học máy (Machine Learning) và trí thông minh nhân tạo (Artificial Intelligence). Không giống như các tiếp cận trước đây, các phương pháp mới này không đưa ra bất kì giả thiết chặt chẽ nào như đòi hỏi của các cách tiếp cận theo phương pháp thống kê. Thay vào đó, các tiếp cận mới này cố gắng khai thác và đưa ra các kiến thức, các thông tin đầu ra chỉ dựa vào các thông tin đầu vào là các quan sát, các thông tin trong quá khứ. Với bài toán phân loại tín dụng, một số mô hình thuộc học máy như mạng trí tuệ nhân tạo ANN (Artificial Neural Network), Máy Hỗ Trợ Véctơ SVM (Support Vector Machines), K láng giềng gần nhất KNN (K-Nearest Neighbors), rừng ngẫu nhiên RF (Random Forest), cây quyết định DT (Decision Tree) chẳng hạn đã chứng tỏ nhiều ưu thế về mức độ chính xác cũng như tin cậy so với một số mô hình phân loại truyền thống (Chi & Hsu, 2012; Huang et.all, 2004; Huang, Chen, & Wang, 2007; Ince & Aktan, 2009; Martens và ctg., 2010).
+
+Dự án này được thực hiện nhằm đánh giá và so sánh chất lượng phân loại của mô hình Logisitic - một cách tiếp cận truyền thống của thống kê với  ba mô hình Machine Learning là Random Forest, Gradient Boosting Machine và Artificial Neural Network (tên đầy đủ là Multi-layer Feedforward Artificial Neural Network) trên cả hai nhóm chỉ tiêu chính là: (1) các chỉ tiêu thống kê thuần túy như Accuracy, và (2) hệ quả kinh tế - lợi nhuận từ việc sử dụng mô hình đối với tổ chức tài chính - ngân hàng. 
+
+Dữ liệu sử dụng là **hmeq.csv** của cuốn [CREDIT RISK ANALYTICS MEASUREMENT TECHNIQUES, APPLICATIONS, and EXAMPLES in SAS and R](http://www.creditriskanalytics.net/datasets-private.html). 
+
+
+## Section 1 {.tabset}
+
+Give an introduction to section 1A...
+
+
+### Sub Section 1
+
+Write something in this sub section... 
+
+```{r}
+library(tidyverse)
+theme_set(theme_minimal())
+iris %>% 
+  ggplot(aes(Sepal.Length, Sepal.Width, color = Species, fill = Species)) + 
+  geom_point() + 
+  geom_smooth(method = "lm")
+
+```
+
+### Sub Section 2
+
+Write something in this sub section...
+
+```{r}
+summary(iris)
+```
+
+
+## Section 2 {.tabset}
+
+Give an introduction to section 2...
+
+### Sub Section 1
+
+Write something in this sub section... 
+
+```{r}
+iris %>% 
+  group_by(Species) %>% 
+  count() %>% 
+  ggplot(aes(Species, n, fill = Species)) + 
+  geom_col()
+```
+
+### Sub Section 2
+
+Write something in this sub section...
+
+### Sub Section 3
+
+Write something in this sub section...
+
+
+
+
+
+

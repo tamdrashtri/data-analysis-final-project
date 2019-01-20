@@ -36,6 +36,9 @@ recObj <- recipe(Churn ~ ., data = train) %>% # chose Churn as the response vari
 bakedTrain <- bake(recObj, new_data = train) # use bake to transform according to recipes
 bakedTest <- bake(recObj, new_data = test)
 
+write_csv(bakedTrain, "data/bakedTrain.csv")
+
+
 # for reproduciblity
 set.seed(123)
 
