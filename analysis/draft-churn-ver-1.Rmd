@@ -1,16 +1,16 @@
 ---
-title: "Predicting and Evaluating Churn and its economic impact" 
-# subtitle: "Business Analytics Division"
+title: "Predicting and Evaluating Churn and its economic impact"
 author: "Tam Nguyen"
 output:
-  html_document: 
-    code_download: true
+  pdf_document:
+    toc: yes
+  html_document:
+    code_download: yes
     code_folding: hide
     highlight: pygments
-    # number_sections: yes
-    theme: "flatly"
-    toc: TRUE
-    toc_float: TRUE
+    theme: flatly
+    toc: yes
+    toc_float: yes
 ---
 
 ```{r setup,include=FALSE}
@@ -22,7 +22,7 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 library(simpleSetup)
 
 # Load packages, install if needed
-packages <- c('tidyverse', 'viridis')
+packages <- c('tidyverse', 'viridis', 'readr')
 library_install(packages)
 
 
@@ -135,7 +135,11 @@ churn %>%
   theme_linedraw(base_size = 7, base_line_size = 0, base_rect_size = 0.1)
 ```
 
+These plots show patterns of differences between churners and non-churners:
+* There are no noticable differences between churners and non-churners with categorical variables
+* In terms of numerical variables plotted by the density plot, it is observed that churners are more likely to have higher monthly charges, more likely to be tenured and have higher charges compared to non-churners.
 
+* regression analysis
 
 ### Data Preparation
 

@@ -37,7 +37,7 @@ bakedTrain <- bake(recObj, new_data = train) # use bake to transform according t
 bakedTest <- bake(recObj, new_data = test)
 
 write_csv(bakedTrain, "data/bakedTrain.csv")
-
+write_csv(bakedTest, "data/bakedTest.csv")
 
 # for reproduciblity
 set.seed(123)

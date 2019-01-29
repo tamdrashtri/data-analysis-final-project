@@ -4,10 +4,20 @@
 library(simpleSetup)
 
 # Load packages, install if needed
-packages <- c('tidyverse', 'skimr', "GGally", "purrr", "repurrrsive",
-              "nycflights13","gmodels", "stringr", "DataExplorer",
-              "summarytools", "recipes", "broom", "modelr", "magrittr",
-              "corrr", "viridis", "readr", "caret", "forcats", "tidyquant",
-              "h2o", "rsample", "randomForest", "ranger", "caret", "rpart",
-              "party", "vip", "h2o")
+packages <- c('tidyverse',
+              'skimr',
+              "GGally",
+              "stringr",
+              "DataExplorer",
+              "summarytools",
+              "recipes",
+              "magrittr",
+              "corrr",
+              "viridis",
+              "h2o",
+              "rsample",
+              "h2o",
+              "caret",
+              "fs",
+              "viridis")
 library_install(packages)

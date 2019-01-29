@@ -224,30 +224,29 @@ performance_tbl %>%
   geom_line(aes(y = precision), color = "blue", size = 1) +
   geom_line(aes(y = recall), color = "red", size = 1) +
   geom_vline(xintercept = h2o.find_threshold_by_max_metric(performance_h2o, "f1")) +
-  theme_tq() +
+  theme_linedraw() +
   labs(title = "Precision vs Recall", y = "value")
 
 
 # ROC Plot
 
-path <- "04_Modeling/h2o_models/DeepLearning_0_AutoML_20180503_035824"
+path <- "models/h2o_models/DeepLearning_0_AutoML_20180503_035824"
 
 load_model_performance_metrics <- function(path, test_tbl) {
 
   model_h2o <- h2o.loadModel(path)
-  perf_h2o  <- h2o.performance(model_h2o, newdata = as.h2o(test_tbl))
+  perf_h2o  <- h2o.performance(model_h2o, new_data = as.h2o(test_tbl))
 
   perf_h2o %>%
     h2o.metric() %>%
     as.tibble() %>%
     mutate(auc = h2o.auc(perf_h2o)) %>%
     select(tpr, fpr, auc)
-
 }
 
-model_metrics_tbl <- fs::dir_info(path = "04_Modeling/h2o_models/") %>%
+model_metrics_tbl <- fs::dir_info(path = "models/h2o_models/") %>%
   select(path) %>%
-  mutate(metrics = map(path, load_model_performance_metrics, test_tbl)) %>%
+  mutate_if(metrics = map(path, load_model_performance_metrics, test_tbl)) %>%
   unnest()
 
 model_metrics_tbl %>%
