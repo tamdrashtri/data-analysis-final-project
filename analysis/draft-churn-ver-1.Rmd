@@ -45,11 +45,6 @@ There are some characteristics of the telecom industry:
 
 ## Churn and its importance
 
-Customer churn is defined as the rate of customers quitting a service, and is one of the main issues in industries like telecommunications, internet service providers, e-commerce, marketing, and banking. The telecommunication industry particularly suffers the highest rate in any industry. Companies often focus on retaining customers rather than acquiring new ones because the cost of acquiring new customers can be five to six times higher than retaining existing customers (Colgate & Danaher, 2000). In the telecommunication industry specifically, the market is saturated, making it difficult to attract new customers (Manďák, 2018). On the customer side, it is very easy for customers to switch to a new provider if it provides a more beneficial offer (Canale and Lunardon, 2014). Therefore, it is important to invest in developing customers' trust and loyalty for the service. Having an understanding of the influential factors causing customer churn can help companies understand customers' needs and adjust on their provided services to reduce churn. 
-
-Churn is an important part of the Customer Relationship Management (CRM). In CRM, the core concepts of customer equity entails customer retention and is one of the most important component of the customer lifetime value framework applied in marketing and other business applications. From an analytical perspective, the period of which a customer remain at the service is essential for companies to calculate lifetime value (CLV) and customer equity, since this rate drives companies' profits and growth. While companies acknowledge its importance, not many companies are successful at retaining their customers. 85% customers think companies could do more to keep them. 49% of managers in companies report not satisfied with their customer retention goal. More researches also report retention campaigns can cause harm instead of attaining the intended goal.
-
-
 ## CRISP Framework
 
 ### Why doesn't this project use other modeling approaches

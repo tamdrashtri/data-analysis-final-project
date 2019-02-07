@@ -1,3 +1,10 @@
+
+
+
+
+
+
+
 source("code/setup.R")
 
 train <- read_csv("data/train.churn.csv")
@@ -6,8 +13,6 @@ test <- read_csv("data/test.churn.csv")
 
 recipe_obj <- recipe(Churn ~ ., data = train) %>%
   step_zv(all_predictors()) %>%
-  step_dummy(all_nominal(), -Churn) %>%
-  step_corr(all_predictors()) %>%
   prep(data = train)
 
 recipe_obj
@@ -49,7 +54,7 @@ automl_models_h2o@leaderboard
 
 automl_models_h2o@leader
 
-
+h2o.getModel("StackedEnsemble_AllModels_0_AutoML_20190204_101345") #new
 
 h2o.getModel("StackedEnsemble_AllModels_0_AutoML_20190121_100814")
 
@@ -59,12 +64,16 @@ h2o.getModel("StackedEnsemble_AllModels_0_AutoML_20190121_100814")
 h2o.getModel("StackedEnsemble_AllModels_0_AutoML_20190121_100814") %>%
   h2o.saveModel(path = "models/h2o_models/")
 
+h2o.getModel("StackedEnsemble_AllModels_0_AutoML_20190204_101345") %>%
+  h2o.saveModel(path = "models/h2o_models/") #new
 
 stackEnsemble <- h2o.loadModel("models/h2o_models/StackedEnsemble_AllModels_0_AutoML_20190121_100814")
 
+stackEnsemble <- h2o.loadModel("models/h2o_models/StackedEnsemble_AllModels_0_AutoML_20190204_101345") # neư
+
 # Making Predictions
 
-stacked_ensemble_h2o <- h2o.loadModel("models/h2o_models/StackedEnsemble_AllModels_0_AutoML_20190121_100814")
+stacked_ensemble_h2o <- h2o.loadModel("models/h2o_models/StackedEnsemble_AllModels_0_AutoML_20190204_101345")
 
 stacked_ensemble_h2o
 

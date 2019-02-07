@@ -3,7 +3,7 @@
 
 # 1. Setup ----
 
-# Load Libraries 
+# Load Libraries
 
 library(h2o)
 library(recipes)
@@ -26,7 +26,7 @@ source("00_Scripts/data_processing_pipeline.R")
 train_readable_tbl <- process_hr_data_readable(train_raw_tbl, definitions_raw_tbl)
 test_readable_tbl  <- process_hr_data_readable(test_raw_tbl, definitions_raw_tbl)
 
-# ML Preprocessing Recipe 
+# ML Preprocessing Recipe
 recipe_obj <- recipe(Attrition ~ ., data = train_readable_tbl) %>%
     step_zv(all_predictors()) %>%
     step_num2factor(JobLevel, StockOptionLevel) %>%
@@ -72,10 +72,10 @@ ev_with_OT_tbl <- predictions_with_OT_tbl %>%
         )
     ) %>%
     mutate(
-        cost_of_policy_change = 0 
+        cost_of_policy_change = 0
     ) %>%
     mutate(
-        expected_attrition_cost = 
+        expected_attrition_cost =
             Yes * (attrition_cost + cost_of_policy_change) +
             No *  (cost_of_policy_change)
     )
@@ -92,7 +92,7 @@ total_ev_with_OT_tbl
 # 3.2 Calculating Expected Value Without OT ----
 
 test_without_OT_tbl <- test_tbl %>%
-    mutate(OverTime = fct_recode(OverTime, "No" = "Yes")) 
+    mutate(OverTime = fct_recode(OverTime, "No" = "Yes"))
 
 test_without_OT_tbl
 
@@ -113,8 +113,6 @@ predictions_without_OT_tbl <- automl_leader %>%
 
 predictions_without_OT_tbl
 
-avg_overtime_pct <- 0.10
-
 ev_without_OT_tbl <- predictions_without_OT_tbl %>%
     mutate(
         attrition_cost = calculate_attrition_cost(
@@ -127,10 +125,10 @@ ev_without_OT_tbl <- predictions_without_OT_tbl %>%
         cost_of_policy_change = case_when(
             OverTime_0 == "Yes" & OverTime_1 == "No" ~ avg_overtime_pct * attrition_cost,
             TRUE ~ 0
-        ) 
+        )
     ) %>%
     mutate(
-        expected_attrition_cost = 
+        expected_attrition_cost =
             Yes * (attrition_cost + cost_of_policy_change) +
             No *  (cost_of_policy_change)
     )

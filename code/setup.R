@@ -19,5 +19,7 @@ packages <- c('tidyverse',
               "h2o",
               "caret",
               "fs",
-              "viridis")
+              "viridis",
+              "xtable",
+              "tidyquant")
 library_install(packages)

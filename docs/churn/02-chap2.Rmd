@@ -16,7 +16,7 @@ If you are doing a thesis that will involve lots of math, you will want to read 
 
 <!-- MATH and PHYSICS majors: Uncomment the following section -->
 <!--
-$$\sum_{j=1}^n (\delta\theta_j)^2 \leq {{\beta_i^2}\over{\delta_i^2 + \rho_i^2}}
+\sum_{j=1}^n (\delta\theta_j)^2 \leq {{\beta_i^2}\over{\delta_i^2 + \rho_i^2}}
 \left[ 2\rho_i^2 + {\delta_i^2\beta_i^2\over{\delta_i^2 + \rho_i^2}} \right] \equiv \omega_i^2
 $$
 

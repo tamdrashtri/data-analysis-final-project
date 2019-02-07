@@ -1,7 +1,7 @@
 
 
 source("code/setup.R")
-
+churn_clean <- read_csv("data/churn.clean.csv")
 churnYes <- churn_clean %>%
   filter(Churn %in% c("Yes"))
 
@@ -38,12 +38,13 @@ calculate_churn_cost <- function(
 
   #
   churn_rate           = 1.9,
-  customer_lifetime    = 19, # months
+  customer_lifetime    = 52, # months
+  churner_churn        = 19, # months
   CLV                  = 1782,
 
   # profit loss
   gross_margin             = 0.55,
-  gross_profit             = 240,
+  gross_profit             = 34,
   acquisition_cost         = 315
 
 ) {
@@ -51,7 +52,7 @@ calculate_churn_cost <- function(
   # Cost = Acquisition cost for a new customer + CLV
 
   # Total Cost of customer churn
-  total_cost <- (CLV*0.68 + acquisition_cost)*n
+  total_cost <- ((customer_lifetime - churner_churn)*gross_profit)*n
 
   return(total_cost)
 
@@ -93,7 +94,8 @@ churn_clean %>%
   group_by(Churn) %>%
   summarize(n = n()) %>%
   ungroup() %>%
-  mutate(pct = n / sum(n))
+  mutate(pct = n / sum(n)) %>%
+  xtable()
 # pct of churners are 0.265
 # churners are 1869, non-churners are 5174
 
