@@ -61,24 +61,7 @@ Both of these types of variables are beneficial for our predictive analysis. It 
 This project uses R to implement three predictive models: logistic regression, random forest and decision trees. I choose these models because they are often used in papers that have been published on churn. These are also well-known predictive models. 
 
 Some of them will be implemented as black box, meaning I cannot know very well what are the processes they do the analysis on. Therefore, I will choose the dive deep into logistic regression and see if they are well performed. I choose logistic regression particularly because it is one of the models easiest to explain and measure performance. 
-
 Bear in mind that these models will be briefly explained instead of looking into details. Specifically, I will mention its advantages and disadvantages of each of these models, then I will explain the steps I did to get the final results. 
-
-CRISP helps to build a data science project based on business results and financial benefits. I will follow this framework since it combines both the data science approach and the evaluation of the project. It connects the models with the return on investment to show the value or impact from the business.
-The reasons we also use CRISP is because:
-
-* It's an agile method: it implements data science projects iteratively, helping us to overcome common sense thinking and help us to adjust to unexpected issues quickly.
-* It's data science for business's sake. It focuses on the ROI of the project, helping us to evaluate KPIs and potential economic impact if the model is implemented.
-* In terms of churn, ROI is one of the most critical metrics in which we want to know besides the technical aspect of data science.
-
-Follow this framework step-by-step helps us to make sure we don't miss any important steps during the process. The important steps are described as followed:
-
-* Business Understanding: In this step, we define the business objective of the project, identifying the appropriate KPIs and create a plan to correspond to the goal of the project
-* Data Understanding: This step requires getting familiar with the data and collect the data in appropriate formats for analysis
-* Data Preparation: This is when the data collected from the data understanding process being selected and transformed into the best formal for modeling.
-* Modeling: We apply predictive models and try to optimize the results. 
-* Evaluation: We use various methods to assess the model results, clarifying the black box models to make it understandable to different stakeholders. Some of the methods we use in this project are the ROC curve, gain and lift chart and LIME.
-* Deployment: We use the results from the model to link with the business processes, providing the recommendations needed to improve the business.
 
 
 # Business Understanding
@@ -112,7 +95,7 @@ calculate_churn_cost <- function(
 
   # profit loss
   gross_margin             = 0.55,
-  gross_profit             = 40.92, #74.4*0.55
+  gross_profit             = 34,
   acquisition_cost         = 315
 
 ) {
@@ -251,12 +234,6 @@ churn_clean %>%
 \end{table}
 
 ## code
-
-## Exploratory Visualisation
-
-Exploratory visualization helps us to gain a general understanding of the relationships between explanatory variables and the response variable. The first step in this visualization process is to evaluate the distribution of different variables corresponding to churn. Here we visualise a summary of the distribution of different variables with two charts. One is for numerical variables and another is for categorical variables. 
-
-
 
 ```{r analysis-business-understanding, include=FALSE}
 # Payment Method versus Paperless Billing versus Contract ----
@@ -419,18 +396,6 @@ train_tbl %>%
 
 # Modeling 
 
-Ensembles is a type of machine learning methods that combine multiple algorithms. In this specific case, H2O is a supervised machine learning algorithm that finds the optimal combination among many prediction algorithms called stacking. Stacking is a way to combine multiple algorithms by applying models by the results of other models. From a learned model, a new model uses the result of this model to train new models. There are different types of models tackling different spaces of the problem. The final model is stacked on top of other models which tackle each part of the modeling process. This is said to improve the overall performance of the model.
-The algorithm for stacking ensemble is as followed:
-
-1. Split the training set into two sets, such as 0.3 and 0.7 
-2. Train several base learners on the first part.
-3. Test the base learners on the second part.
-4. Using the predictions from the testing result as the inputs, and the correct responses as the outputs, train a higher level learner.
-
-In stacking, the combining mechanism is that the output of the classifiers (Level 0 classifiers) will be used as training data for another classifier (Level 1 classifier) to approximate the same target function. Basically, you let the Level 1 classifier to figure out the combining mechanism.
-
-In this paper, we use H2O for our analysis. Particularly, we use H2O autoML which combines different algorithms and score the performance of each model using a leaderboard. The implementations and details of these models used are not discussed here in detail. Rather, we will introduce the model used once we completed the modeling process.
-
 ```{r initiate model, include=FALSE}
 recipe_obj <- recipe(Churn ~ ., data = train) %>%
   step_zv(all_predictors()) %>%
@@ -493,15 +458,6 @@ model_metrics_tbl <- fs::dir_info(path = "../models/h2o_models/") %>%
 
 
 ```
-
-Lift Chart are used measure  your prediction of random guess(WITHOUT ANY MACHINE LEARNING MODEL) vs using a model(Like Decision Tree/Logistic Regression). Such improvement of prediction from random guess is called Lift.
-
-Lift is a measure of the performance of a targeting model (association rule) at predicting or classifying cases as having an enhanced response (with respect to the population as a whole), measured against a random choice targeting model.
-
-Gain = (Expected Response Using Predictive Model) / (Expected Response From Random Mailing)
-
-Lift = (Expected Response In A Specific Lot Of 10,000 Prospects Using Predictive Model) / (Expected Response In A Random Lot Of 10,000 Prospects Without Using Predictive Model)
-
 
 ```{r gain-lift-chart, include=FALSE}
 # Gain & Lift
@@ -598,27 +554,3 @@ lift_transformed_tbl %>%
 
 
 ```
-
-## LIME
-
-The common problem of any complex model is that it is a black box model and is extremely hard to interpret. So it is quite difficult to trust the model. LIME provides a local interpretation, estimating which feature adds the most value to the prediction. Because it makes complex models interpretable, it is good for human practitioners, businesses to understand and build trust to the algorithm.
-
-Variable importance only shows how correlated the relationship between the variable predicted and the response variable. It does not give us whether given a new observation, what are the most influential predictors influencing the outcome. Though a most important variable might not drive the reason causing churn. We need to understand what is most influential for the specific employee.
-
-Local Interpretable Model-agnostic Explanations (LIME) is a visualization technique that helps explain individual predictions. As the name implies, it is model agnostic so it can be applied to any supervised regression or classification model. Behind the workings of LIME lies the assumption that every complex model is linear on a local scale and asserting that it is possible to fit a simple model around a single observation that will mimic how the global model behaves at that locality.
-
-The general algorithm of how LIME works is:
-
-1. Given an observation, permute it to create replicated feature data with slight value modifications.
-2. Compute similarity distance measure between original observation and permuted observations.
-3. Apply selected machine learning model to predict outcomes of permuted data.
-4. Select m number of features to best describe predicted outcomes.
-5. Fit a simple model to the permuted data, explaining the complex model outcome with m features from the permuted data weighted by its similarity to the original observation .
-6. Use the resulting feature weights to explain local behavior.
-
-LIME gives us two plots that help us to visualize the results. It can work in any algorithm. 
-
-
-
-# Expected Value
-
