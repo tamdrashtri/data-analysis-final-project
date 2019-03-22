@@ -1,13 +1,2 @@
-## Final Project: 
-
-Predicting Churn using Logistic Regression, Random Forest and Decision Tree.
-
-## Main question: 
-
-What predictive models perform best to predict the churn rate in the telecom industry? 
-
-## Hypothesis: 
-
-Complex machine learning models have more predictive powers compared to simple algorithms.
-
+This study aims to predict churn using Automated Machine Learning (Auto ML) and measure the expected value of the model to maximize business value for the telecommunication industry. The entire project uses R as a programming language to conduct data preparation, modeling, evaluation. I also aim to communicate results effectively using data visualization, as it is usually the best way to understand and gain insights.
 
